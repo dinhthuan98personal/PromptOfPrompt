@@ -18,33 +18,34 @@ function App() {
     setAnalysis(null)
     setOptimizedPrompt('')
 
-    // Simulate AI analysis
-    await new Promise(resolve => setTimeout(resolve, 2000))
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+      
+      // Call API to analyze and optimize
+      const response = await fetch(`${API_URL}/api/analyze-and-optimize`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prompt }),
+      })
 
-    // Mock analysis data
-    const mockAnalysis = {
-      clarity: 75,
-      specificity: 68,
-      completeness: 82,
-      suggestions: [
-        'Thêm context cụ thể hơn về mục tiêu',
-        'Sử dụng từ khóa rõ ràng hơn',
-        'Bổ sung thông tin về định dạng output mong muốn'
-      ]
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || 'Failed to analyze prompt')
+      }
+
+      const data = await response.json()
+      
+      setAnalysis(data.analysis)
+      setOptimizedPrompt(data.optimizedPrompt)
+    } catch (error) {
+      console.error('Error analyzing prompt:', error)
+      // Show error to user (you can add a toast/notification component later)
+      alert(`Lỗi: ${error.message}. Vui lòng kiểm tra lại API key và server.`)
+    } finally {
+      setIsAnalyzing(false)
     }
-
-    setAnalysis(mockAnalysis)
-    setIsAnalyzing(false)
-
-    // Generate optimized prompt
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    setOptimizedPrompt(
-      `[Context: ${prompt}] Hãy cung cấp một phản hồi chi tiết và có cấu trúc, bao gồm:\n` +
-      `1. Phân tích sâu về chủ đề\n` +
-      `2. Ví dụ cụ thể và minh họa\n` +
-      `3. Kết luận và khuyến nghị\n\n` +
-      `Định dạng: Markdown với các section rõ ràng.`
-    )
   }
 
   return (
